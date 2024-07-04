@@ -16,6 +16,10 @@ Contact person: [Haishuo Fang](mailto:haishuo.fang@tu-darmstadt.de)
 
 Don't hesitate to send us an e-mail or report an issue, if something is broken (and it shouldn't be) or if you have further questions.
 
+
+![InferAct](./inferact_arch.jpg "Workflow of InferAct")
+
+
 ## Environment
 ```bash
 python -m venv inferact
@@ -25,18 +29,21 @@ pip install -r requirements.txt
 ## Structure
 tree command
 ## Get Started
-Remebmer to remove the openai key
-
-![InferAct](./inferact_arch.pdf)
 
 ### Run Actor
 We adapt code for `ALFWorld`, `HotPotQA`, `WebShop` from the [Reflexion repository](https://github.com/noahshinn/reflexion)
 
 To run the Actor agent in `ALFWorld` and `WebShop`, you need to configure the enviromments. Please refer to the original repository.
 
-The Actor agent is reponsible for performing tasks in environments. `--run_agents` controls whether to run actor in different environments `--task webshop`.
+The Actor agent is reponsible for performing tasks in environments. `--run_agents` controls whether to run actor in different environments e.g. `--task webshop`.
 
-`python main.py --run_agents --task webshop --trial_num 0 --feedback_type nl`
+```python
+python main.py 
+--run_agents 
+--task webshop 
+--trial_num 0
+--feedback_type nl
+```
 
 ### Run Evaluator
 The evaluator evaluates the Actor trajectory before critical actions.
@@ -49,11 +56,13 @@ The evaluator evaluates the Actor trajectory before critical actions.
 --threshold 0.9
 --do_eval`
 
-`--eval_method` specifies different evaluation methods. `--threshold` specifies the threshold of F1-score for `multi-step evaluation` and `inferact`. `--do_eval` controls whether to evaluate the Actor trajectory.
+`--eval_method` specifies different evaluation methods.<br>
+`--threshold` specifies the threshold of F1-score for `multi-step evaluation` and `inferact`.<br>
+`--do_eval` controls whether to evaluate the Actor trajectory.<br>
 
 ### Run Feedback Generation
 
-Once the evaluator detect the off-track trajectory, the binary or NL feedback will be generated to prevent critial action execution.
+After the off-track trajectory is detected by the Evaluator, the binary or NL feedback will be generated to prevent the critial action from executing.
 
 ```python
 python main.py
@@ -66,8 +75,9 @@ python main.py
 --feedback_type nl
 ```
 ### Pipeline
-To run these components in a pipeline, you can use 
-```python main.py 
+To run different components in a pipeline, you can use 
+```python
+python main.py 
     --model_name gpt35-turbo
     --run_agents 
     --task hotpotqa
