@@ -1,0 +1,16 @@
+-------------------------------------------------------------------------------
+Copyright 2016
+Ubiquitous Knowledge Processing (UKP) Lab
+Technische Universität Darmstadt
+
+-------------------------------------------------------------------------------
+Third party legal information
+
+This repository incorporates components from the following third-party projects:
+1.Reflexion - MIT License
+ https://github.com/noahshinn/reflexion
+
+ -------------------------------------------------------------------------------
+Acknowledgements
+
+We would like to thank the developers and contributors of the above-mentioned projects for their work and the open-source community at large for its invaluable contributions to the software industry.
