@@ -56,7 +56,7 @@ export ALFWORLD_DATA="path/to/data"
 ## 🛠️ Usage
 
 ### Run Actor
-We adapt code for `ALFWorld`, `HotPotQA`, `WebShop` from the [Reflexion repository](https://github.com/noahshinn/reflexion)
+We adapt code for `ALFWorld`, `HotPotQA` from the [Reflexion repository](https://github.com/noahshinn/reflexion)
 
 
 The Actor agent is responsible for performing tasks in environments. `--run_agents` controls whether to run actor in different environments e.g. `--task webshop`.
@@ -73,7 +73,7 @@ python main.py
 ### Run Evaluator
 The evaluator evaluates the Actor's trajectory before critical actions.
 
-'''python
+```python
 python main.py 
     --do_eval
     --task webshop
@@ -82,7 +82,7 @@ python main.py
     --model_name gpt4-turbo
     --feedback_type nl
     --threshold 0.9
-'''
+```
 
 - `--eval_method` specifies different evaluation methods.<br>
 - `--threshold` specifies the threshold of F1-score for `multi-step evaluation` and `inferact`.<br>
