@@ -89,7 +89,7 @@ class MultistepEvaluator(BaseEvaluator):
                     probs = [opt[1] for opt in obj['real-time eval'][ix]["probs"]]
                     final_prob = kwargs['aggregated_func'](probs)
                     y_pred[-1] = 1 - final_prob
-                    if final_prob > kwargs['threshold']:
+                    if final_prob > float(kwargs['threshold']):
                         pred_label = "Correct"
                     else:
                         pred_label = "Incorrect"

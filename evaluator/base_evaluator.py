@@ -8,14 +8,14 @@ class BaseEvaluator:
             
             self.base_model = AnyOpenAILLM(
                 model_name=kwargs.get("model_name", "gpt4-turbo"),
-                model_kwargs={"temperature": kwargs.get("temperature", 0.0), "max_tokens": kwargs.get("max_new_tokens", 500)})
+                model_kwargs={"temperature": kwargs.get("temperature", 0.0), "max_tokens": kwargs.get("max_tokens", 500)})
         
         elif "llama" in kwargs["model_name"]:
             self.base_model = LocalLLM(
                 model_pth=kwargs["model_path"],
                 temperature=kwargs.get("temperature", 0.0),
                 tokenizer_pth=kwargs["model_path"],
-                max_new_tokens=kwargs.get("max_new_tokens", 500),
+                max_new_tokens=kwargs.get("max_tokens", 500),
             )
 
         self.task = task

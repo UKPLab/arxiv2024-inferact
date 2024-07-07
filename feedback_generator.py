@@ -11,13 +11,11 @@ from tqdm import tqdm
 from actor.hotpotqa.fewshots import REFLECTIONS
 from actor.hotpotqa.agents import truncate_scratchpad
 
-import ipdb
-
 class FeedbackGenerator:
     def __init__(self, task, feedback_type, eval_method, threshold, **kwargs):
         self.base_model = AnyOpenAILLM(
             model_name=kwargs.get("model_name", "gpt4-turbo"),
-            model_kwargs={"temperature": kwargs.get("temperature", 0.0), "max_new_tokens": kwargs.get("max_new_tokens", 500)}
+            model_kwargs={"temperature": kwargs.get("temperature", 0.0), "max_tokens": kwargs.get("max_tokens", 500)}
         )
         self.task = task
         self.feedback_type = feedback_type
@@ -32,7 +30,9 @@ class FeedbackGenerator:
         if self.task == "webshop":
             self.initial_feedback_prompt = ws_feedback_prompt
             self.subseqent_feedback_prompt = ws_afterwards_feedback_prompt
-            
+            self.binary_feedback_prompt = ws_binary_feedback_prompt
+            with open('./prompts/reflection_few_shot_examples.txt', 'r') as f:
+                self.few_shot_examples = f.read()
 
         elif self.task == "hotpotqa":
             self.initial_feedback_prompt = hot_feedback_prompt
@@ -73,6 +73,7 @@ class FeedbackGenerator:
 
     def prompt_binary_feedback_gen(self, trace, prev_feedback):
         messages, original_task = self.get_trajectory_func[self.task](trace['path'])
+
         if self.task == 'alfworld':
             prompt = self.binary_feedback_prompt + f"\n\n{self.few_shot_examples}\n\n{trace}"
             if len(prev_feedback) > 0:
@@ -83,6 +84,14 @@ class FeedbackGenerator:
                 question=original_task,
                 scratchpad=truncate_scratchpad("\n".join(messages[0])),
             )
+
+        elif self.task == 'webshop':
+            scenario = f"Instruction:\n{original_task}\n\n" + "\n".join(messages[0])
+            prompt = self.binary_feedback_prompt.format(
+                Examples=self.few_shot_examples,
+                scenario=scenario)
+            if len(prev_feedback) > 0:
+                prompt += "\n\nPlans from past attempts:\n" + "\n- ".join([f.strip() for f in prev_feedback])
 
         result = self.base_model([HumanMessage(content=prompt)])
         return result
@@ -160,7 +169,7 @@ class FeedbackGenerator:
                 print(f"trace for {env} is correct")
                 continue
             if self.feedback_type == "binary":
-                feedback = self.prompt_binary_feedback_gen(env, trace, prev_feedback)
+                feedback = self.prompt_binary_feedback_gen(trace, prev_feedback)
             else:
                 feedback = self.prompt_nl_feedback_gen(env, prompt, trace, prev_feedback)
             with open(os.path.join(self.feedback_dir, f"{file}"), "a") as f:

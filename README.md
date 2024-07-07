@@ -24,9 +24,33 @@ Don't hesitate to send us an e-mail or report an issue, if something is broken (
 
 ## 🚀 Setup
 ```sh
-> python -m venv interact
-> source ./inferact/bin/activate
+> python -m venv .inferact
+> source ./.inferact/bin/activate
 > pip install -r requirements.txt
+```
+
+### WebShop
+- Install openjdk in the virtual environment.
+```python
+import jdk
+from jdk.enums import OperatingSystem, Architecture
+
+jdk.install('11', operating_system=OperatingSystem.LINUX)
+import os
+jdk_version = 'jdk-11.0.19+7' #change with your version
+os.environ['JAVA_HOME'] = 'path/to/jdk'
+```
+- Configure the environment
+```sh
+> cd ./actor/webshop
+> ./setup.sh -d all
+```
+### ALFWorld
+- Download env data
+
+Please refer to [ALFWorld](https://github.com/alfworld/alfworld)
+```sh
+export ALFWORLD_DATA="path/to/data"
 ```
 
 ## 🛠️ Usage
@@ -34,30 +58,31 @@ Don't hesitate to send us an e-mail or report an issue, if something is broken (
 ### Run Actor
 We adapt code for `ALFWorld`, `HotPotQA`, `WebShop` from the [Reflexion repository](https://github.com/noahshinn/reflexion)
 
-To run the Actor agent, you need to configure environments. Please refer to the original repositories for configuration.
 
 The Actor agent is responsible for performing tasks in environments. `--run_agents` controls whether to run actor in different environments e.g. `--task webshop`.
 
-```sh
-> python main.py 
+```python
+python main.py 
     --run_agents 
     --task webshop 
     --trial_num 0
     --feedback_type nl
+    --num_envs 300
 ```
 
 ### Run Evaluator
 The evaluator evaluates the Actor's trajectory before critical actions.
 
-```sh
-> python main.py --feedback_type nl
-    --model_name gpt4-turbo
-    --eval_method inferact
-    --task webshop
-    --trial_num 0
-    --threshold 0.9
+'''python
+python main.py 
     --do_eval
-```
+    --task webshop
+    --eval_method inferact
+    --trial_num 0
+    --model_name gpt4-turbo
+    --feedback_type nl
+    --threshold 0.9
+'''
 
 - `--eval_method` specifies different evaluation methods.<br>
 - `--threshold` specifies the threshold of F1-score for `multi-step evaluation` and `inferact`.<br>
@@ -67,31 +92,32 @@ The evaluator evaluates the Actor's trajectory before critical actions.
 
 After the off-track trajectory is detected by the Evaluator, the binary or NL feedback will be generated to prevent the critial action from executing.
 
-```sh
-> python main.py
-    --model_name gpt4-turbo
-    --eval_method inferact
-    --task webshop
-    --trial_num 0
-    --threshold 0.9
+```python
+python main.py
     --do_feedback_gen
+    --task webshop
+    --eval_method inferact
+    --trial_num 0
+    --model_name gpt4-turbo
+    --threshold 0.9
     --feedback_type nl
 ```
 ### Pipeline
-To run different components in a pipeline, you can combine `--run_agents`, `--do_eval` or `--do_feedback_gen` 
-```sh
-> python main.py 
-    --model_name gpt35-turbo
-    --task webshop
-    --trial_num 0
-    --feedback_type nl
-    --eval_method standard
-    --threshold 0.9
+To run different components in a pipeline, you can use 
+
+```python
+python main.py 
+    --run_agents
     --do_eval
     --do_feedback_gen
-    --run_agents
+    --task webshop
+    --model_name gpt35-turbo
+    --num_envs 300
+    --eval_method standard
+    --trial_num 0
+    --threshold 0.0
+    --feedback_type nl
 ```
-
 
 ## Cite
 

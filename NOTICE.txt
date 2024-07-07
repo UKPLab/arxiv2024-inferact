@@ -10,6 +10,15 @@ This repository incorporates components from the following third-party projects:
 1.Reflexion - MIT License
  https://github.com/noahshinn/reflexion
 
+2. WebShop - MIT License
+https://github.com/princeton-nlp/WebShop
+
+3.ALFWorld - MIT License
+https://github.com/alfworld/alfworld
+
+4. HotPotQA -  Apache 2.0 License
+https://github.com/hotpotqa/hotpot
+
  -------------------------------------------------------------------------------
 Acknowledgements
 

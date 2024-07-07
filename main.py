@@ -7,10 +7,19 @@ from tqdm import tqdm
 from sklearn.metrics import precision_recall_curve, auc
 import numpy as np
 from feedback_generator import FeedbackGenerator
-from actor.alfworld.alfworld_trial import run_trial
+from actor.alfworld.alfworld_trial import run_alfworld
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'actor/webshop/'))
+# for path in sys.path:
+#     print(path)
+from actor.webshop.webshop_trial import run_webshop
+import sys
 from actor.hotpotqa.agents import ReactAgent
+import logging
 
-def run_alfworld(args, feedback_dir):
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(filename)s - %(levelname)s - %(message)s', datefmt='%m-%d %H:%M:%S')
+
+def run_alfworld_webshop(args, feedback_dir):
 
     # initialize environment configs
     env_configs = []
@@ -19,46 +28,57 @@ def run_alfworld(args, feedback_dir):
             env_configs += [{
             'name': f'env_{i}',
             'memory': [],
-            'is_success': False,
-            'skip': False
+            'is_skip': False
             }]
         else:
-            with open(os.path.join(feedback_dir, f"{i}.txt"), 'r') as f:
-                feedback = f.readlines()
-            if str(len(feedback)) != args.trial_num:
-                env_configs += [{
-                    'name': f'env_{i}',
-                    'memory': [],
-                    'is_success': True,
-                    'skip': False
-                }]
+            if os.path.exists(os.path.join(feedback_dir, f"{i}.txt")):
+                with open(os.path.join(feedback_dir, f"{i}.txt"), 'r') as f:
+                    feedback = f.readlines()
+
+                # this indicates that the task is solved
+                if len(feedback) == args.trial_num:
+                    env_configs += [{
+                        'name': f'env_{i}',
+                        'memory': [fed.strip() for fed in feedback],
+                        'is_skip': False
+                    }]
+
+                else:
+                    env_configs += [{
+                        'name': f'env_{i}',
+                        'memory': [],
+                        'is_skip': True
+                    }]
+
             else:
                 env_configs += [{
                     'name': f'env_{i}',
-                    'memory': [fed.strip() for fed in feedback],
-                    'is_success': False,
-                    'skip': False
+                    'memory': [],
+                    'is_skip': True
                 }]
-            
+
+    # run trials
+    trial_log_dir: str = os.path.join(args.traj_dir, args.task, f"retrial_{args.trial_num}", args.feedback_type if int(args.trial_num) > 0 else '')
+
     print(f"""
     -----
     Starting run with the following parameters:
 
     Number of environments: {args.num_envs}
-    Use memory: {args.use_memory}
 
-    Sending trajectories to `{args.traj_dir}`
+    Sending trajectories to `{trial_log_dir}`
     -----
     """)
-
-    # run trials
-    trial_log_dir: str = os.path.join(args.traj_dir, f"retrial_{args.trial_num}", args.feedback_type if int(args.trial_num) > 0 else '')
 
     if not os.path.exists(trial_log_dir):
         os.makedirs(trial_log_dir)
 
     # run trial
-    run_trial(trial_log_dir, env_configs, args.use_memory, args.model_name)
+    if args.task == "alfworld":
+        run_alfworld(trial_log_dir, env_configs, args.model_name)
+    elif args.task == "webshop":
+        run_webshop(trial_log_dir, env_configs, args.model_name)
+
 
 def run_hotpotqa(args, feedback_dir, actor_flies_dir):
     with open("./outputs/actor-traj/hotpotqa/data.json", "r") as f:
@@ -121,7 +141,7 @@ def run_evaluator(args, evaluator, actor_traj_dir, last_rejected_files, eval_dir
         if "config" in file:
             continue
         if not os.path.exists(os.path.join(actor_traj_dir, file)):
-            print(f"there is no {os.path.join(actor_traj_dir, file)}")
+            logging.info(f"Evaluating the trajectory, but there is no {os.path.join(actor_traj_dir, file)}")
             continue
         with open(os.path.join(actor_flies_dir, file), "r") as f:
             data = json.load(f)
@@ -144,30 +164,23 @@ def run_evaluator(args, evaluator, actor_traj_dir, last_rejected_files, eval_dir
         f_file.flush()
     f_file.close()
 
-def cal_metrics(data_dir, files, kwargs, evaluator):
-    true_positive, true_negative, false_positive, false_negative, fn_cost = 0, 0, 0, 0, 0
-    y_true, y_pred, all_tp_tasks, all_predicted_pos = [], [], [], []
+def cal_metrics(eval_result_file, kwargs, evaluator):
     false_negative_env = []
+    
+    json_objects = convert_json_objs(eval_result_file)
 
-    for file in files:
-        if "backup" in file: continue
-        json_objects = convert_json_objs(os.path.join(data_dir, file))
+    output, tp_tasks, predicted_pos = evaluator.metric(json_objects, **kwargs)
 
-        output, tp_tasks, predicted_pos = evaluator.metric(json_objects, **kwargs)
-        for pred in predicted_pos:
-            pred.update({'folder_name': file})
-        true_positive += output["true_positive"]
-        true_negative += output["true_negative"]
-        false_positive += output["false_positive"]
-        false_negative += output["false_negative"]
-        false_negative_env += output.get('false_negative_env', [])
-        y_true += output["y_true"]
-        y_pred += output["y_pred"]
-        fn_cost += output["fn_cost"]
-        all_tp_tasks += tp_tasks
-        all_predicted_pos += predicted_pos
+    true_positive = output["true_positive"]
+    true_negative = output["true_negative"]
+    false_positive = output["false_positive"]
+    false_negative = output["false_negative"]
+    false_negative_env = output.get('false_negative_env', [])
+    y_true = output["y_true"]
+    y_pred = output["y_pred"]
+    fn_cost = output["fn_cost"]
 
-    print('y true', len(y_true))
+
     epsilon = 1e-17
     recall = true_positive / (true_positive + false_negative + epsilon)
     precision = true_positive / (true_positive + false_positive + epsilon)
@@ -201,17 +214,15 @@ def cal_metrics(data_dir, files, kwargs, evaluator):
             "threshold": kwargs.get("threshold", ""),
             "positive_count": sum(y_true),
             "negative_count": len(y_true) - sum(y_true),
-            "total_count": len(y_true)}, all_tp_tasks, all_predicted_pos
+            "total_count": len(y_true)}, tp_tasks, predicted_pos
 
 
 def run_metrics(args, evaluator, eval_dir):
     eval_metric_dir = os.path.join(eval_dir, "eval_metrics", args.feedback_type if args.trial_num > 0 else "init")
     if not os.path.exists(eval_metric_dir):
         os.makedirs(eval_metric_dir)
-    eval_result_dir = os.path.join(eval_dir, "eval_results")
-    files = os.listdir(eval_result_dir)
-    files = sorted(files)
-
+    eval_result_file = os.path.join(eval_dir, "eval_results", f"{args.feedback_type}.txt" if args.trial_num > 0 else "init.txt")
+    
     kwargs = {'threshold': args.threshold, 'task': args.task}
     if args.eval_method == "multi_step":
         result = {}
@@ -219,9 +230,9 @@ def run_metrics(args, evaluator, eval_dir):
         pred_pos = {}
         for func in [np.prod, np.max, np.mean, np.min]:
             kwargs["aggregated_func"] = func
-            result[func.__name__], tp_tasks[func.__name__], pred_pos[func.__name__] = cal_metrics(eval_result_dir, files, kwargs)
+            result[func.__name__], tp_tasks[func.__name__], pred_pos[func.__name__] = cal_metrics(eval_result_file, kwargs, evaluator)
     else:
-        result, tp_tasks, pred_pos = cal_metrics(eval_result_dir, files, kwargs, evaluator)
+        result, tp_tasks, pred_pos = cal_metrics(eval_result_file, kwargs, evaluator)
     threshold = kwargs.get("threshold", "")
     with open(os.path.join(eval_metric_dir, f"predicted_pos{threshold}.json"), "w") as f:
         json.dump(pred_pos, f, indent=4)
@@ -240,7 +251,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="gpt4-turbo", help="model name, gpt4-turbo, gpt35-turbo")
     parser.add_argument("--model_path", type=str, default="", help="path to the local model")
-    parser.add_argument("--eval_method", type=str, default="standard", help="standard, multistep, standard_sc, inferact")
+    parser.add_argument("--eval_method", type=str, default="standard", help="standard, multi_step, standard_sc, inferact")
     parser.add_argument(
         "--save_dir",
         type=str,
@@ -254,7 +265,7 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", type=str, default="")
     parser.add_argument("--traj_dir", type=str, default="./outputs/actor-traj")
     ## args for Alfworld
-    parser.add_argument("--num_envs", type=int, help="The number of environments per trial")
+    parser.add_argument("--num_envs", type=int, help="The number of environments per trial in Alfworld or webshop")
     parser.add_argument("--use_memory", action='store_true', help="Allow the Agent to use memory")
     ## actions
     parser.add_argument("--run_agents", action="store_true", help="run agents")
@@ -263,14 +274,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    assert args.eval_method in ["standard", "multistep", "standard_sc", "inferact"], "eval_method should be one of standard, multistep, standard_sc, inferact"
+    assert args.eval_method in ["standard", "multi_step", "standard_sc", "inferact"], "eval_method should be one of standard, multi_step, standard_sc, inferact"
 
     kwargs = {"model_path": args.model_path, "model_name": args.model_name, "risk_mode": args.risk_mode}
 
     if args.eval_method == "self_consistency":
         kwargs["temperature"] = 0.7
 
-    evaluators = {"standard": StandardEvaluator, "multistep": MultistepEvaluator, "standard_sc": StandardEvaluatorSC, "inferact": InferAct}
+    evaluators = {"standard": StandardEvaluator, "multi_step": MultistepEvaluator, "standard_sc": StandardEvaluatorSC, "inferact": InferAct}
     evaluator = evaluators[args.eval_method](args.task, **kwargs)
 
     if args.model_name == "gpt4-turbo":
@@ -291,10 +302,15 @@ if __name__ == "__main__":
     feedback_dir = os.path.join("./outputs/feedbacks", args.task,  args.feedback_type)
 
     if args.run_agents:
+        logging.info(f"------Running agents for {args.task}------")
+
+        print(f"Running agents for {args.task}...")
         if args.task == "alfworld":
-            run_alfworld(args, feedback_dir)
+            run_alfworld_webshop(args, feedback_dir)
         elif args.task == "hotpotqa":
             run_hotpotqa(args, feedback_dir, actor_flies_dir)
+        elif args.task == 'webshop':
+            run_alfworld_webshop(args, feedback_dir)
 
 
     last_rejected_files = []
@@ -323,12 +339,14 @@ if __name__ == "__main__":
 
 
     if args.do_eval:
+        logging.info(f"-----Running evaluation for {args.task}------")
         run_evaluator(args, evaluator, actor_flies_dir, last_rejected_files, eval_dir, kwargs)
         # calculate F1 score, auc-pr
         run_metrics(args, evaluators[args.eval_method], eval_dir)
 
     if args.do_feedback_gen:
         # generate nl feedback for rejected envs
+        logging.info(f"-----Generating {args.feedback_type} feedback for next trial for {args.task}------")
         kwargs = {"feedback_dir": feedback_dir, "last_rejected_path": last_rejected_path, "actor_traj_dir": actor_flies_dir, "trial_num": args.trial_num}
         
         if args.task == "alfworld":
