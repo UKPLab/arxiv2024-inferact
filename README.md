@@ -126,7 +126,7 @@ Please use the following citation:
 ```
 @article{fang2024inferact,
   title={InferAct: Inferring Safe Actions for LLMs-Based Agents Through Preemptive Evaluation and Human Feedback},
-  author={Fang, Haishuo and Zhu, Xiaodan and Gurevych， Iryna},
+  author={Fang, Haishuo and Zhu, Xiaodan and Gurevych, Iryna},
   journal={arXiv preprint arXiv:xxx.xxx},
   url={}
   year={2024}
