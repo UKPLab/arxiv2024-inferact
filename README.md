@@ -124,16 +124,12 @@ python main.py
 Please use the following citation:
 
 ```
-@InProceedings{smith:20xx:CONFERENCE_TITLE,
-  author    = {Smith, John},
-  title     = {My Paper Title},
-  booktitle = {Proceedings of the 20XX Conference on XXXX},
-  month     = mmm,
-  year      = {20xx},
-  address   = {Gotham City, USA},
-  publisher = {Association for XXX},
-  pages     = {XXXX--XXXX},
-  url       = {http://xxxx.xxx}
+@article{fang2024inferact,
+  title={InferAct: Inferring Safe Actions for LLMs-Based Agents Through Preemptive Evaluation and Human Feedback},
+  author={Fang, Haishuo and Zhu, Xiaodan and Gurevych， Iryna},
+  journal={arXiv preprint arXiv:xxx.xxx},
+  url={}
+  year={2024}
 }
 ```
 
