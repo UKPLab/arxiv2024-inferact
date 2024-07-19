@@ -1,5 +1,5 @@
 # InferAct: Inferring Safe Actions for LLMs-Based Agents Through Preemptive Evaluation and Human Feedback
-[![Arxiv](https://img.shields.io/badge/Arxiv-YYMM.NNNNN-red?style=flat-square&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2407.11843)
+[![Arxiv](https://img.shields.io/badge/Arxiv-2407.11843-red?style=flat-square&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2407.11843)
 [![License](https://img.shields.io/github/license/UKPLab/ukp-project-template)](https://opensource.org/licenses/Apache-2.0)
 [![Python Versions](https://img.shields.io/badge/Python-3.10-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 
