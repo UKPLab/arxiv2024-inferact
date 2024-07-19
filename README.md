@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/UKPLab/ukp-project-template)](https://opensource.org/licenses/Apache-2.0)
 [![Python Versions](https://img.shields.io/badge/Python-3.10-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 
-This repository implements the preemptive evaluation approach, InferAct, for LLM agents, as described in [InferAct: Inferring Safe Actions for LLMs-Based Agents Through Preemptive Evaluation and Human Feedback]() 
+This repository implements the preemptive evaluation approach, InferAct, for LLM agents, as described in [InferAct: Inferring Safe Actions for LLMs-Based Agents Through Preemptive Evaluation and Human Feedback](https://arxiv.org/abs/2407.11843) 
 
 > **Abstract** :A crucial requirement for deploying LLM-based agents in real-life applications is the robustness against risky or even irreversible mistakes. However, the existing research lacks a focus on preemptive evaluation of reasoning trajectories performed by LLM agents, leading to a gap in ensuring safe and reliable operations.
 To explore better solutions, this paper introduces InferAct, a novel approach that leverages the Theory-of-Mind capability of LLMs to proactively detect potential errors before critical actions are executed (e.g., *buy-now* in automatic online trading or web shopping).
@@ -125,10 +125,9 @@ Please use the following citation:
 
 ```
 @article{fang2024inferact,
-  title={InferAct: Inferring Safe Actions for LLMs-Based Agents Through Preemptive Evaluation and Human Feedback},
+  title={InferAct: Inferring Safe Actions for LLM-Based Agents Through Preemptive Evaluation and Human Feedback},
   author={Fang, Haishuo and Zhu, Xiaodan and Gurevych, Iryna},
-  journal={arXiv preprint arXiv:xxx.xxx},
-  url={}
+  journal={arXiv preprint arXiv:2407.11843},
   year={2024}
 }
 ```
